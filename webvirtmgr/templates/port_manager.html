@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}Port {{port_name}}{% endblock %}
+{% block content %}
+<div class="main col-xs-12 col-sm-9">
+    {% if errors %}
+        {% for error in errors %}
+            <div class="alert alert-danger">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                {{ error }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <a href="{% url 'bridge_manager' srv_name bridge_name %}" class="btn btn-sm btn-info">Back to Bridge</a>
+    <button href="#ManualCom" class="btn btn-sm btn-info" data-toggle="modal">Manual Command
+        <span class="glyphicon glyphicon-edit"></span>
+    </button>
+    <h3>Bridge:{{bridge_name}} Port:{{port_name}}</h3>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <ul id="btnsection" class="nav nav-tabs">
+                <li class="active"><a class="inst-btn" href="#base" data-toggle="tab">
+                    <span class="glyphicon glyphicon-wrench"></span><br>VLAN</a></li>
+                <li class="inst-btn"><a class="inst-btn" href="#stp" data-toggle="tab">
+                    <span class="glyphicon glyphicon-briefcase"></span><br>STP</a></li>
+                <li><a class="inst-btn" href="#rstp" data-toggle="tab">
+                    <span class="glyphicon glyphicon-camera"></span><br>RSTP</a></li>
+                <li><a class="inst-btn" href="#mcast" data-toggle="tab">
+                    <span class="glyphicon glyphicon-signal"></span><br>MCast</a></li>
+            </ul>
+        <!-- Base settings -->
+            <div class="tab-content">
+              <div id="base" class="tab-pane fade in active">
+                <form class="form-horizontal" method="post" action="" role="form">{% csrf_token %}
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Tag</label>
+                        <div class="col-sm-2">
+                            <input type="number" name="tag" class="form-control" required pattern="^[0-9]+"
+                            min="0" max="4095" step="1" title="optional integer, in range 0 to 4,095" value="{{ tag }}"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Trunks</label>
+                        <div class="col-sm-5">
+                            <input type="text" name="trunks" class="form-control" required pattern="^\[([0-9]*,* *)*\]"
+                                   value="{{ trunks }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-1 col-sm-10">
+                          <button type="submit" name="edit_port_base" class="btn btn-primary">Change</button>
+                        </div>
+                    </div>
+                </form>
+              </div>
+              <!-- STP settings -->
+              <div id="stp" class="tab-pane fade">
+                <form class="form-horizontal" method="post" action="" role="form">{% csrf_token %}
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">STP path cost</label>
+                        <div class="col-sm-2">
+                            <input type="number" name="stp-path-cost" class="form-control" required pattern="^[0-9]+"
+                                   min="0" max="1024" step="1" value="{{ stp_path_cost }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-1 col-sm-10">
+                          <button type="submit" name="edit_port_stp" class="btn btn-primary">Change</button>
+                        </div>
+                    </div>
+                </form>
+              </div>
+            <!-- RSTP settings -->
+              <div id="rstp" class="tab-pane fade">
+                <form class="form-horizontal" method="post" action="" role="form">{% csrf_token %}
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">RSTP</label>
+                        <div class="col-sm-6">
+                            {% if rstp_enable %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_disable"
+                                       value="{% trans 'Disable' %}">
+                            {% else %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_enable"
+                                       value="{% trans 'Enable' %}">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "RSTP port priority" %}</label>
+                        <div class="col-sm-2">
+                            <input type="number" name="rstp-port-priority" class="form-control" required pattern="^[0-9]+"
+                            min="0" max="1024" step="16" value="{{ rstp_port_priority }}"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "RSTP port number" %}</label>
+                        <div class="col-sm-2">
+                            <input type="number" name="rstp-port-num" class="form-control" required pattern="^[0-9]+"
+                            min="1" max="24" step="1" value="{{ rstp_port_num }}"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "RSTP path cost" %}</label>
+                        <div class="col-sm-2">
+                            <input type="number" name="rstp-path-cost" class="form-control" required pattern="^[0-9]+"
+                            min="1" max="1000" step="1" value="{{ rstp_path_cost }}"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">RSTP admin edge</label>
+                        <div class="col-sm-6">
+                            {% if rstp_port_admin_edge %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_port_admin_adge_disable"
+                                       value="{% trans 'Disable' %}">
+                            {% else %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_port_admin_adge_enable"
+                                       value="{% trans 'Enable' %}">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">RSTP auto edge</label>
+                        <div class="col-sm-6">
+                            {% if rstp_port_auto_edge %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_port_auto_adge_disable"
+                                       value="{% trans 'Disable' %}">
+                            {% else %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_port_auto_adge_enable"
+                                       value="{% trans 'Enable' %}">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">RSTP admin point to point MAC value of port</label>
+
+                        <div class="col-sm-5">
+                            <select name="rstp-admin-p2p-mac" class="form-control">
+                                <option value="0">not point-to-point</option>
+                                <option selected value="1">point-to-point, the default value</option>
+                                <option value="2">automatic detection</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">RSTP admin port state</label>
+                        <div class="col-sm-6">
+                            {% if rstp_admin_port_state %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_admin_port_state_disable"
+                                       value="{% trans 'Disable' %}">
+                            {% else %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_admin_port_state_enable"
+                                       value="{% trans 'Enable' %}">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">RSTP mcheck value</label>
+                        <div class="col-sm-6">
+                            {% if rstp_port_mcheck %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_port_mcheck_disable"
+                                       value="{% trans 'Disable' %}">
+                            {% else %}
+                                <input type="submit" class="btn btn-xs btn-default" name="rstp_port_mcheck_enable"
+                                       value="{% trans 'Enable' %}">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-sm-offset-1 col-sm-10">
+                          <button type="submit" name="edit_port_rstp" class="btn btn-primary">Change</button>
+                        </div>
+                    </div>
+                </form>
+              </div>
+
+            <!-- MCast settings -->
+              <div id="mcast" class="tab-pane fade">
+                <form class="form-horizontal" method="post" action="" role="form">{% csrf_token %}
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Flooding of Reports</label>
+                        <div class="col-sm-6">
+                            {% if mcast_snooping_flood_reports %}
+                                <input type="submit" class="btn btn-xs btn-default" name="mcast_snooping_flood_reports_disable"
+                                       value="{% trans 'Disable' %}">
+                            {% else %}
+                                <input type="submit" class="btn btn-xs btn-default" name="mcast_snooping_flood_reports_enable"
+                                       value="{% trans 'Enable' %}">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Flooding  of  multicast  packets" %}</label>
+                        <div class="col-sm-6">
+                            {% if mcast_snooping_flood %}
+                                <input type="submit" class="btn btn-xs btn-default" name="mcast_snooping_flood_disable"
+                                       value="{% trans 'Disable' %}">
+                            {% else %}
+                                <input type="submit" class="btn btn-xs btn-default" name="mcast_snooping_flood_enable"
+                                       value="{% trans 'Enable' %}">
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Modal Secret -->
+    <div class="modal fade" id="ManualCom" tabindex="-1" role="dialog" aria-labelledby="ManualCom"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Enter new command for ovs-vsctl</h4>
+                </div>
+                <div class="tab-content">
+                    <form class="form-horizontal" method="post" action="" role="form">{% csrf_token %}
+                        <div class="form-group">
+                            <label class="col-sm-0 control-label"></label>
+                            <div class="col-sm-12">
+                                <input type="text" name="man_command" class="form-control" placeholder="add-br br10" maxlength="10"
+                                       required pattern="[a-z0-9\.\:]+"/>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default"
+                                    data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary" name="set_man">Set</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <table class="table table-hover table-nolines">
+        <tbody>
+            {% for k,v in port_sets.items %}
+                <tr><td>{{k}}:</td>
+                    <td>{{v}}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% include 'sidebar_close.html' %}
+
+{% endblock %}

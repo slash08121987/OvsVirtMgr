@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}{% trans "Overview" %}{% endblock %}
+{% block content %}
+    {% include 'sidebar.html' %}
+    <div class="main col-xs-12 col-sm-9">
+        {% if errors %}
+            {% for error in errors %}
+                <div class="alert alert-danger">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    {{ error }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <h4>{% trans "Basic details" %}</h4>
+        <table class="table table-hover table-nolines">
+            <tbody>
+                <tr>
+                    <td>{% trans "Connection" %}</td>
+                    <td>{{ uri_conn }}</td>
+                </tr>
+                <tr>
+                    <td>{% trans "Hostname" %}</td>
+                    <td>{{ hostname }}</td>
+                </tr>
+                <tr>
+                    <td>{% trans "Hypervisor" %}</td>
+                    <td>{{ hypervisor }}</td>
+                </tr>
+                <tr>
+                    <td>{% trans "Memory" %}</td>
+                    <td>{{ host_memory|filesizeformat }}</td>
+                </tr>
+                <tr>
+                    <td>{% trans "Logical CPUs" %}</td>
+                    <td>{{ logical_cpu }}</td>
+                </tr>
+                <tr>
+                    <td>{% trans "Processor" %}</td>
+                    <td>{{ model_cpu }}</td>
+                </tr>
+                <tr>
+                    <td>{% trans "Architecture" %}</td>
+                    <td>{{ host_arch }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>{% trans "Performance" %}</h4>
+        <canvas id="Chart" width="700" height="200"></canvas>
+    </div>
+    {% include 'sidebar_close.html' %}
+{% endblock %}
+{% block script %}
+    <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+    <script type="text/javascript">
+
+        function hostusage() {
+            $.getJSON('{% url 'hostusage' host_id %}', function (data) {
+
+            var options = {
+                animation: false,
+                pointDotRadius: 2,
+                scaleLabel: "<%=value%> %",
+                scaleOverride: true,
+                scaleSteps: 10,
+                scaleStepWidth: 10,
+                scaleStartValue: 0,
+                responsive: true
+            };
+            var ctx = $("#Chart").get(0).getContext("2d");
+            new Chart(ctx, {
+                  type: 'line',
+                  data: data['cpu'],
+                  options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + '%';
+                                }
+                            }
+                        }]
+                    }
+                  }
+              });
+            });
+
+        }
+
+        $(function () {
+            window.setInterval('hostusage()', {{ time_refresh }});
+        });
+    </script>
+{% endblock %}
